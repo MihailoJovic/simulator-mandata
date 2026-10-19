@@ -11,8 +11,8 @@ const { pathToFileURL } = require('node:url');
 
 const DIST = path.join(__dirname, '..', 'dist');
 const ORIGIN = 'app://simulator';
-const SMOKE = process.argv.find((a) => a.startsWith('--smoke-test='));
-// Automatska provera koristi zaseban, privremeni profil — ne dira korisnikove podatke ni otvoreni prozor.
+const SMOKE = process.argv.find((a) => a.startsWith('--smoke-test=') || a.startsWith('--update-check='));
+// Automatske provere koriste zaseban, privremeni profil — ne diraju korisnikove podatke ni otvoreni prozor.
 if (SMOKE) app.setPath('userData', fs.mkdtempSync(path.join(app.getPath('temp'), 'simulator-smoke-')));
 
 protocol.registerSchemesAsPrivileged([
@@ -211,7 +211,18 @@ if (!SMOKE && !app.requestSingleInstanceLock()) {
   app.whenReady().then(() => {
     protocol.handle('app', serveDist);
     Menu.setApplicationMenu(null);
-    if (SMOKE) return smokeTest(SMOKE.slice('--smoke-test='.length));
+    if (SMOKE && SMOKE.startsWith('--smoke-test=')) return smokeTest(SMOKE.slice('--smoke-test='.length));
+    // --update-check=<fajl>: samo proveri GitHub Releases i upiši rezultat (provera mehanizma ažuriranja).
+    const UPD = process.argv.find((a) => a.startsWith('--update-check='));
+    if (UPD) {
+      setupUpdater();
+      const out = UPD.slice('--update-check='.length);
+      return autoUpdater
+        .checkForUpdates()
+        .then((r) => fs.writeFileSync(out, JSON.stringify({ current: app.getVersion(), latest: r && r.updateInfo.version, status: updateStatus }, null, 2)))
+        .catch((e) => fs.writeFileSync(out, JSON.stringify({ error: String(e) })))
+        .finally(() => app.exit(0));
+    }
     setupUpdater();
     createWindow();
     if (canUpdate()) {
