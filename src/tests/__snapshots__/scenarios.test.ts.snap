@@ -1,0 +1,22 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Regresija: Evropska Srbija tik ispod vs. tik iznad cenzusa > ES tačno na granici: minimum za cenzus prelazi, minimum − 1 ne prelazi 1`] = `
+{
+  "above": {
+    "demo_1": 136,
+    "demo_2": 87,
+    "demo_3": 9,
+    "demo_4": 14,
+    "demo_5": 4,
+    "demo_6": 0,
+  },
+  "below": {
+    "demo_1": 140,
+    "demo_2": 91,
+    "demo_3": 0,
+    "demo_4": 14,
+    "demo_5": 5,
+    "demo_6": 0,
+  },
+}
+`;

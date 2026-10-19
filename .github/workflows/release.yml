@@ -1,0 +1,31 @@
+name: Release (Windows installer)
+
+# Pokreće se kada se objavi tag oblika v1.2.3 (vidi README → "Objavljivanje nove verzije").
+# Pravi Simulator-mandata-Setup-<verzija>.exe i latest.yml i kači ih na GitHub Release;
+# instalirane aplikacije ih automatski pronalaze.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Proveri da tag odgovara verziji u package.json
+        shell: bash
+        run: |
+          V=$(node -p "require('./package.json').version")
+          if [ "v$V" != "${GITHUB_REF_NAME}" ]; then echo "Tag ${GITHUB_REF_NAME} ne odgovara verziji v$V iz package.json"; exit 1; fi
+      - run: npm test
+      - run: npm run release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
